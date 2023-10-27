@@ -61,7 +61,8 @@ func getIP(r *http.Request) string {
 func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if r.AddHostnameToServerHeader {
 		if node, ok := os.LookupEnv("NODE_NAME"); ok {
-			rw.Header().Set("Server", node)
+			rw.Header().Del("Server")
+			rw.Header().Add("Server", node)
 		}
 	}
 
