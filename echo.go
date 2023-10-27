@@ -59,6 +59,12 @@ func getIP(r *http.Request) string {
 }
 
 func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if r.AddHostnameToServerHeader {
+		if node, ok := os.LookupEnv("NODE_NAME"); ok {
+			rw.Header().Set("Server", node)
+		}
+	}
+
 	if req.URL.Path == r.Path {
 		scheme := "http"
 		tlsVersion := ""
@@ -108,12 +114,6 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		if _, err := rw.Write([]byte(response)); err == nil {
 			return
-		}
-	}
-
-	if r.AddHostnameToServerHeader {
-		if node, ok := os.LookupEnv("NODE_NAME"); ok {
-			rw.Header().Set("Server", node)
 		}
 	}
 
