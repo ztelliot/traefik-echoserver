@@ -73,8 +73,10 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 
+		host, _, _ := net.SplitHostPort(req.Host)
+
 		response := ""
-		response += fmt.Sprintf("h=%s\n", req.Host)
+		response += fmt.Sprintf("h=%s\n", host)
 		if req.Header.Get("X-Forwarded-For") != "" {
 			response += fmt.Sprintf("ip=%s\n", req.Header.Get("X-Forwarded-For"))
 		} else {
