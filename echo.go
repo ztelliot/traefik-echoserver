@@ -77,7 +77,10 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		host, _, _ := net.SplitHostPort(req.Host)
+		host := req.Host
+		if strings.Contains(host, ":") {
+			host, _, _ = net.SplitHostPort(host)
+		}
 
 		response := ""
 		response += fmt.Sprintf("h=%s\n", host)
