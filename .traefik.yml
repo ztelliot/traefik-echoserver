@@ -3,7 +3,7 @@ type: middleware
 
 import: github.com/ztelliot/traefik-echoserver
 
-summary: 'Echo Server'
+summary: 'Echo diagnostic information like Cloudflare'
 
 testData:
   path: '/cdn-cgi/info'
