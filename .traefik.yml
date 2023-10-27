@@ -1,0 +1,9 @@
+displayName: Echo Server
+type: middleware
+
+import: github.com/ztelliot/traefik-echoserver
+
+summary: 'Echo Server'
+
+testData:
+  path: '/cdn-cgi/info'
