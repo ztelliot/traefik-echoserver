@@ -14,4 +14,5 @@ spec:
   plugin:
     echo:
       path: /cdn-cgi/trace
+      addHostnameToServerHeader: true
 ```

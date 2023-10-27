@@ -14,29 +14,33 @@ import (
 
 // Config the plugin configuration
 type Config struct {
-	Path string `json:"path,omitempty"`
+	Path                      string `json:"path,omitempty"`
+	AddHostnameToServerHeader bool   `json:"addHostnameToServerHeader,omitempty"`
 }
 
 // CreateConfig creates the default plugin configuration
 func CreateConfig() *Config {
 	return &Config{
-		Path: "/cdn-cgi/info",
+		Path:                      "/cdn-cgi/info",
+		AddHostnameToServerHeader: true,
 	}
 }
 
 // echoServer
 type echoServer struct {
-	next http.Handler
-	name string
-	Path string
+	next                      http.Handler
+	name                      string
+	Path                      string
+	AddHostnameToServerHeader bool
 }
 
 // New created a new plugin
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	return &echoServer{
-		next: next,
-		name: name,
-		Path: config.Path,
+		next:                      next,
+		name:                      name,
+		Path:                      config.Path,
+		AddHostnameToServerHeader: config.AddHostnameToServerHeader,
 	}, nil
 }
 
@@ -104,6 +108,12 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		if _, err := rw.Write([]byte(response)); err == nil {
 			return
+		}
+	}
+
+	if r.AddHostnameToServerHeader {
+		if node, ok := os.LookupEnv("NODE_NAME"); ok {
+			rw.Header().Set("Server", node)
 		}
 	}
 
