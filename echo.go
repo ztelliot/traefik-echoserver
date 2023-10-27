@@ -59,13 +59,6 @@ func getIP(r *http.Request) string {
 }
 
 func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	if r.AddHostnameToServerHeader {
-		if node, ok := os.LookupEnv("NODE_NAME"); ok {
-			rw.Header().Del("Server")
-			rw.Header().Add("Server", node)
-		}
-	}
-
 	if req.URL.Path == r.Path {
 		scheme := "http"
 		tlsVersion := ""
@@ -104,6 +97,9 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 		if node, ok := os.LookupEnv("NODE_NAME"); ok {
 			response += fmt.Sprintf("node=%s\n", node)
+			if r.AddHostnameToServerHeader {
+				rw.Header().Add("Server", node)
+			}
 		}
 		if pod, ok := os.LookupEnv("POD_NAME"); ok {
 			response += fmt.Sprintf("pod=%s\n", pod)
@@ -118,5 +114,19 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	r.next.ServeHTTP(rw, req)
+	if r.next != nil {
+		if r.AddHostnameToServerHeader {
+			r.next.ServeHTTP(newResponseModifier(rw, req, r.SetServer), req)
+		} else {
+			r.next.ServeHTTP(rw, req)
+		}
+	}
+}
+
+func (r *echoServer) SetServer(res *http.Response) error {
+	res.Header.Del("Server")
+	if node, ok := os.LookupEnv("NODE_NAME"); ok {
+		res.Header.Set("Server", node)
+	}
+	return nil
 }
