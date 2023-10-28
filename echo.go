@@ -84,11 +84,7 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		response := ""
 		response += fmt.Sprintf("h=%s\n", host)
-		if req.Header.Get("X-Forwarded-For") != "" {
-			response += fmt.Sprintf("ip=%s\n", req.Header.Get("X-Forwarded-For"))
-		} else {
-			response += fmt.Sprintf("ip=%s\n", getIP(req))
-		}
+		response += fmt.Sprintf("ip=%s\n", getIP(req))
 		response += fmt.Sprintf("ts=%d\n", time.Now().Local().UnixMilli())
 		response += fmt.Sprintf("scheme=%s\n", scheme)
 		response += fmt.Sprintf("http=%s\n", req.Proto)

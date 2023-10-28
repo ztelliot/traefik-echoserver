@@ -38,6 +38,7 @@ func TestEchoServer(t *testing.T) {
 	resp := recorder.Result()
 	body, _ := io.ReadAll(resp.Body)
 
+	t.Log(resp.Header)
 	t.Log(string(body))
 
 	if recorder.Code != 200 {
