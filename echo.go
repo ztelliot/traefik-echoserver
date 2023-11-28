@@ -14,33 +14,37 @@ import (
 
 // Config the plugin configuration
 type Config struct {
-	Path                      string `json:"path,omitempty"`
-	AddHostnameToServerHeader bool   `json:"addHostnameToServerHeader,omitempty"`
+	Path                string `json:"path,omitempty"`
+	AddHostnameToHeader bool   `json:"AddHostnameToHeader,omitempty"`
+	Header              string `json:"header,omitempty"`
 }
 
 // CreateConfig creates the default plugin configuration
 func CreateConfig() *Config {
 	return &Config{
-		Path:                      "/cdn-cgi/info",
-		AddHostnameToServerHeader: true,
+		Path:                "/cdn-cgi/info",
+		AddHostnameToHeader: true,
+		Header:              "Server",
 	}
 }
 
 // echoServer
 type echoServer struct {
-	next                      http.Handler
-	name                      string
-	Path                      string
-	AddHostnameToServerHeader bool
+	next                http.Handler
+	name                string
+	Path                string
+	AddHostnameToHeader bool
+	Header              string
 }
 
 // New created a new plugin
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	return &echoServer{
-		next:                      next,
-		name:                      name,
-		Path:                      config.Path,
-		AddHostnameToServerHeader: config.AddHostnameToServerHeader,
+		next:                next,
+		name:                name,
+		Path:                config.Path,
+		AddHostnameToHeader: config.AddHostnameToHeader,
+		Header:              config.Header,
 	}, nil
 }
 
@@ -59,6 +63,11 @@ func getIP(r *http.Request) string {
 }
 
 func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	if r.AddHostnameToHeader {
+		if node, ok := os.LookupEnv("NODE_NAME"); ok {
+			rw.Header().Add(r.Header, node)
+		}
+	}
 	if req.URL.Path == r.Path {
 		scheme := "http"
 		tlsVersion := ""
@@ -96,9 +105,6 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 		if node, ok := os.LookupEnv("NODE_NAME"); ok {
 			response += fmt.Sprintf("node=%s\n", node)
-			if r.AddHostnameToServerHeader {
-				rw.Header().Add("Server", node)
-			}
 		}
 		if pod, ok := os.LookupEnv("POD_NAME"); ok {
 			response += fmt.Sprintf("pod=%s\n", pod)
@@ -114,18 +120,6 @@ func (r *echoServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	if r.next != nil {
-		if r.AddHostnameToServerHeader {
-			r.next.ServeHTTP(newResponseModifier(rw, req, r.SetServer), req)
-		} else {
-			r.next.ServeHTTP(rw, req)
-		}
+		r.next.ServeHTTP(rw, req)
 	}
-}
-
-func (r *echoServer) SetServer(res *http.Response) error {
-	res.Header.Del("Server")
-	if node, ok := os.LookupEnv("NODE_NAME"); ok {
-		res.Header.Set("Server", node)
-	}
-	return nil
 }

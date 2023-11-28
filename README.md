@@ -15,4 +15,5 @@ spec:
     echo:
       path: /cdn-cgi/trace
       addHostnameToServerHeader: true
+      header: Server
 ```
